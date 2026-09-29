@@ -49,6 +49,18 @@ textarea{min-height:84px;resize:vertical}
 .pt{font-size:14px;opacity:.75}
 .note{margin-top:6px;background:var(--cream);border-radius:10px;padding:6px 10px;font-size:14px;white-space:pre-wrap;word-break:break-word}
 .edit{flex:none;border:0;background:var(--sky);border-radius:10px;width:36px;height:36px;font-size:16px}
+.sum{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.chip{border:2px solid var(--sky2);background:#fff;color:var(--navy);border-radius:14px;padding:8px 12px;font:inherit;font-weight:600;font-size:14px;text-align:left;line-height:1.3}
+.chip b{display:block;font-size:16px}
+.chip.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.chip.full{border-color:var(--ok);background:#eaf8ef;color:var(--ok)}
+.chip.full.on{background:var(--ok);color:#fff}
+select{width:100%;font:inherit;font-size:16px;color:var(--navy);border:2px solid var(--sky2);border-radius:14px;padding:12px;background:#fbfdff}
+select:focus{outline:0;border-color:var(--blue)}
+.newpt{display:flex;gap:8px;margin-top:8px}
+.newpt input{flex:1;min-width:0}
+.newpt .btn{width:auto;margin:0;padding:12px 18px}
+.group h3 .ok{background:#eaf8ef;color:var(--ok)}
 .empty{text-align:center;padding:30px 10px;opacity:.7}
 .actions{display:flex;gap:8px}
 .actions .btn{margin-top:0}
@@ -77,9 +89,12 @@ textarea{min-height:84px;resize:vertical}
       <label for="f-name">ชื่อ</label>
       <input id="f-name" required maxlength="60" placeholder="เช่น สมชาย ใจดี">
       <label for="f-point">จุดรับ-ส่ง (เลือกได้จุดเดียว)</label>
-      <input id="f-point" required maxlength="80" list="points" placeholder="พิมพ์หรือเลือกจุดที่มีอยู่">
-      <datalist id="points"></datalist>
-      <div class="hint">พิมพ์จุดใหม่ได้ หรือเลือกจากจุดที่คนอื่นลงไว้แล้ว</div>
+      <select id="f-point" required></select>
+      <div class="newpt hidden" id="newpt">
+        <input id="f-newpt" maxlength="80" placeholder="ชื่อจุดใหม่ เช่น BTS อ่อนนุช">
+        <button class="btn yellow" id="f-addpt" type="button">เพิ่ม</button>
+      </div>
+      <div class="hint">เลือกจากรายการ หรือเลือก “+ เพิ่มจุดใหม่” ถ้ายังไม่มีจุดของคุณ</div>
       <label for="f-note">หมายเหตุ</label>
       <textarea id="f-note" maxlength="300" placeholder="เช่น วันนี้มาไม่ได้ / เปลี่ยนจุดรับเป็น… / ข้อมูลอื่นๆ"></textarea>
       <button class="btn yellow" id="f-submit" type="submit">บันทึก</button>
@@ -96,6 +111,7 @@ textarea{min-height:84px;resize:vertical}
     </div>
     <div class="progress"><span id="prog-text"></span><span id="prog-pct"></span></div>
     <div class="bar"><i id="prog-bar" style="width:0"></i></div>
+    <div class="sum" id="sum"></div>
     <div id="list"></div>
     <button class="btn danger" id="reset" style="margin-top:20px">🔄 รีเซ็ตเครื่องหมาย (เริ่มรอบใหม่)</button>
   </section>
@@ -108,6 +124,7 @@ let state = { mode: 'pickup', people: [] };
 let editingId = null;
 let mine = localStorage.getItem('myId') || null;
 let busy = false;
+let filter = null;
 
 async function api(method, url, body) {
   const r = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
@@ -128,21 +145,30 @@ function render() {
   $('badge').textContent = modeLabel();
   $('m-pickup').classList.toggle('on', state.mode === 'pickup');
   $('m-dropoff').classList.toggle('on', state.mode === 'dropoff');
-  const pts = [...new Set(state.people.map((p) => p.point))].sort((a, b) => a.localeCompare(b, 'th'));
-  $('points').innerHTML = pts.map((p) => `<option value="${esc(p)}">`).join('');
+  const pts = allPoints();
+  fillSelect(pts);
 
   const done = state.people.filter((p) => p.checked).length, total = state.people.length;
   $('prog-text').textContent = `${modeLabel()}แล้ว ${done} / ${total} คน`;
   $('prog-pct').textContent = total ? Math.round((done / total) * 100) + '%' : '';
   $('prog-bar').style.width = total ? (done / total) * 100 + '%' : '0';
 
-  if (!total) { $('list').innerHTML = '<div class="empty">🐥 ยังไม่มีรายชื่อ<br>ไปที่แท็บ “ลงชื่อ” ได้เลย</div>'; return; }
+  if (!total) { $('sum').innerHTML = ''; $('list').innerHTML = '<div class="empty">🐥 ยังไม่มีรายชื่อ<br>ไปที่แท็บ “ลงชื่อ” ได้เลย</div>'; return; }
   const groups = {};
   state.people.forEach((p) => (groups[p.point] = groups[p.point] || []).push(p));
-  $('list').innerHTML = Object.keys(groups).sort((a, b) => a.localeCompare(b, 'th')).map((pt) => {
+  const names = Object.keys(groups).sort((a, b) => a.localeCompare(b, 'th'));
+  if (filter && !groups[filter]) filter = null;
+
+  $('sum').innerHTML = `<button class="chip ${!filter ? 'on' : ''}" data-filter=""><b>ทั้งหมด</b>${done}/${total} คน</button>` +
+    names.map((pt) => {
+      const d = groups[pt].filter((p) => p.checked).length, n = groups[pt].length;
+      return `<button class="chip ${d === n ? 'full' : ''} ${filter === pt ? 'on' : ''}" data-filter="${esc(pt)}"><b>${esc(pt)}</b>${d}/${n} คน${d === n ? ' ✓' : ''}</button>`;
+    }).join('');
+
+  $('list').innerHTML = names.filter((pt) => !filter || pt === filter).map((pt) => {
     const arr = groups[pt].sort((a, b) => a.name.localeCompare(b.name, 'th'));
     const d = arr.filter((p) => p.checked).length;
-    return `<div class="group"><h3>📍 ${esc(pt)}<span>${d}/${arr.length}</span></h3>` + arr.map((p) => `
+    return `<div class="group"><h3>📍 ${esc(pt)}<span class="${d === arr.length ? 'ok' : ''}">${d}/${arr.length}${d === arr.length ? ' ✓' : ''}</span></h3>` + arr.map((p) => `
       <div class="row ${p.checked ? 'done' : ''} ${p.id === mine ? 'mine' : ''}">
         <button class="chk" data-check="${p.id}" aria-label="ยืนยัน">${p.checked ? '✓' : ''}</button>
         <div class="info"><div class="nm">${esc(p.name)}</div>
@@ -150,6 +176,19 @@ function render() {
         <button class="edit" data-edit="${p.id}" aria-label="แก้ไข">✏️</button>
       </div>`).join('') + '</div>';
   }).join('');
+}
+
+// จุดรับส่งทั้งหมด = จุดที่เพิ่มไว้ + จุดที่มีคนใช้อยู่
+function allPoints() {
+  return [...new Set([...(state.points || []), ...state.people.map((p) => p.point)])].sort((a, b) => a.localeCompare(b, 'th'));
+}
+const NEW = '__new__';
+function fillSelect(pts) {
+  const sel = $('f-point'), cur = sel.value;
+  sel.innerHTML = '<option value="" disabled>— เลือกจุดรับ-ส่ง —</option>' +
+    pts.map((p) => `<option value="${esc(p)}">${esc(p)}</option>`).join('') +
+    `<option value="${NEW}">+ เพิ่มจุดใหม่…</option>`;
+  sel.value = pts.includes(cur) || cur === NEW ? cur : '';
 }
 
 function show(tab) {
@@ -165,22 +204,44 @@ $('tab-chk').onclick = () => show('chk');
 function startEdit(id) {
   const p = state.people.find((x) => x.id === id); if (!p) return;
   editingId = id;
-  $('f-name').value = p.name; $('f-point').value = p.point; $('f-note').value = p.note;
+  $('f-name').value = p.name; fillSelect(allPoints()); $('f-point').value = p.point; $('f-note').value = p.note;
   $('form-title').textContent = 'แก้ไขข้อมูล';
   $('f-submit').textContent = 'บันทึกการแก้ไข';
   $('f-cancel').classList.remove('hidden'); $('f-delete').classList.remove('hidden');
   show('reg');
 }
 function endEdit() {
-  editingId = null; $('form').reset();
+  editingId = null; $('form').reset(); $('newpt').classList.add('hidden'); fillSelect(allPoints());
   $('form-title').textContent = 'ลงชื่อของคุณ'; $('f-submit').textContent = 'บันทึก';
   $('f-cancel').classList.add('hidden'); $('f-delete').classList.add('hidden');
 }
 $('f-cancel').onclick = endEdit;
 
+$('f-point').onchange = () => {
+  const isNew = $('f-point').value === NEW;
+  $('newpt').classList.toggle('hidden', !isNew);
+  if (isNew) $('f-newpt').focus();
+};
+$('f-addpt').onclick = async () => {
+  const name = $('f-newpt').value.trim();
+  if (!name) return toast('กรุณาพิมพ์ชื่อจุด');
+  try {
+    state = await api('POST', '/api/points', { name });
+    render(); $('f-point').value = name;
+    $('f-newpt').value = ''; $('newpt').classList.add('hidden');
+    toast('เพิ่มจุดแล้ว');
+  } catch (err) { toast(err.message); }
+};
+$('sum').addEventListener('click', (e) => {
+  const c = e.target.closest('[data-filter]'); if (!c) return;
+  filter = c.dataset.filter || null; render();
+});
+
 $('form').onsubmit = async (e) => {
   e.preventDefault();
-  const body = { name: $('f-name').value, point: $('f-point').value, note: $('f-note').value };
+  const point = $('f-point').value;
+  if (!point || point === NEW) return toast('กรุณาเลือกจุดรับ-ส่ง');
+  const body = { name: $('f-name').value, point, note: $('f-note').value };
   try {
     if (editingId) { await api('PUT', '/api/people/' + editingId, body); toast('แก้ไขเรียบร้อย'); }
     else { const p = await api('POST', '/api/people', body); mine = p.id; localStorage.setItem('myId', mine); toast('ลงชื่อเรียบร้อย 🐥'); }
