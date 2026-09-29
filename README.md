@@ -16,11 +16,11 @@ npm start        # หรือ node server.js  (ต้องมี Node 16+, �
 
 เปิด `http://<ip เครื่อง>:3000` จากมือถือ (ตั้ง `PORT` ได้ ข้อมูลเก็บใน `data.json`)
 
-## นำขึ้นออนไลน์ (Render) ให้พนักงานเปิดลิงก์แล้วลงชื่อได้เลย ไม่ต้องล็อกอิน
+## นำขึ้นออนไลน์ด้วย Netlify (ฟรี, ไม่ต้องล็อกอินตอนใช้งาน)
 
-1. สมัคร https://render.com (ล็อกอินด้วย GitHub)
-2. กด **New → Blueprint** เลือกรีโปนี้ และแบรนช์ที่มีไฟล์ `render.yaml` (ถ้ายังไม่ merge ให้เลือกแบรนช์ `claude/fervent-carson-bw2smh`)
-3. กด **Apply** รอประมาณ 2-3 นาที จะได้ลิงก์รูปแบบ `https://crabb-at-clab.onrender.com` ส่งให้พนักงานได้เลย
+1. สมัคร https://app.netlify.com (ล็อกอินด้วย GitHub)
+2. กด **Add new site → Import an existing project → GitHub** เลือกรีโป `Crabb-At-cLab`
+3. ตั้ง **Branch to deploy** เป็น `claude/fervent-carson-bw2smh` (หรือ `main` หลัง merge) ช่องอื่นปล่อยตามค่าเริ่มต้น (ไฟล์ `netlify.toml` ตั้งไว้แล้ว) แล้วกด **Deploy**
+4. ได้ลิงก์ `https://ชื่อ-ที่-ตั้ง.netlify.app` (เปลี่ยนชื่อได้ที่ Site configuration → Change site name) ส่งให้พนักงานได้เลย
 
-หมายเหตุ: `render.yaml` ใช้แพลน starter พร้อม Disk เพื่อให้รายชื่อไม่หายเมื่อเซิร์ฟเวอร์รีสตาร์ท
-ถ้าใช้แพลนฟรี ให้ลบบรรทัด `disk:` และ `DATA_FILE` ออก แต่รายชื่ออาจหายเมื่อเซิร์ฟเวอร์หลับหรือรีสตาร์ท
+ข้อมูลเก็บใน Netlify Blobs (`netlify/functions/api.mjs`) จึงไม่หายเมื่อ deploy ใหม่

@@ -2,6 +2,8 @@
   "name": "crabb-at-clab",
   "version": "1.0.0",
   "description": "เว็บแอพเช็คชื่อรับ-ส่งพนักงาน",
+  "type": "commonjs",
   "scripts": { "start": "node server.js" },
-  "engines": { "node": ">=16" }
+  "dependencies": { "@netlify/blobs": "^8.1.0" },
+  "engines": { "node": ">=18" }
 }
