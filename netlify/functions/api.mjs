@@ -18,12 +18,25 @@ export async function handle(req, store, uuid = () => crypto.randomUUID()) {
     const rows = await Promise.all(keys.map((k) => store.get(k)));
     return rows.filter(Boolean).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
   };
+  const readPoints = async () => {
+    const keys = await store.list('pt/');
+    const rows = await Promise.all(keys.map((k) => store.get(k)));
+    return rows.filter(Boolean).map((r) => r.name);
+  };
+  const full = async () => ({ mode: await mode(), people: await readAll(), points: await readPoints() });
   const mode = async () => ((await store.get('mode')) || {}).mode || 'pickup';
 
-  if (method === 'GET' && parts[1] === 'state') return json(200, { mode: await mode(), people: await readAll() });
+  if (method === 'GET' && parts[1] === 'state') return json(200, await full());
 
   let body = {};
   if (method !== 'GET') { try { body = await req.json(); } catch (_) {} }
+
+  if (parts[1] === 'points' && method === 'POST') {
+    const name = clean(body.name, 80);
+    if (!name) return json(400, { error: 'กรุณากรอกชื่อจุด' });
+    await store.set('pt/' + encodeURIComponent(name), { name });
+    return json(200, await full());
+  }
 
   if (parts[1] === 'people' && method === 'POST' && !parts[2]) {
     const name = clean(body.name, 60), point = clean(body.point, 80);
@@ -52,11 +65,11 @@ export async function handle(req, store, uuid = () => crypto.randomUUID()) {
   if (parts[1] === 'reset' && method === 'POST') {
     const rows = await readAll();
     await Promise.all(rows.filter((p) => p.checked).map((p) => store.set('p/' + p.id, { ...p, checked: false })));
-    return json(200, { mode: await mode(), people: await readAll() });
+    return json(200, await full());
   }
   if (parts[1] === 'mode' && method === 'POST') {
     if (body.mode === 'pickup' || body.mode === 'dropoff') await store.set('mode', { mode: body.mode });
-    return json(200, { mode: await mode(), people: await readAll() });
+    return json(200, await full());
   }
   return json(404, { error: 'not found' });
 }

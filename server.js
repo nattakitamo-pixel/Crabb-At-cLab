@@ -8,7 +8,7 @@ const PORT = process.env.PORT || 3000;
 const DATA_FILE = process.env.DATA_FILE || path.join(__dirname, 'data.json');
 const PUBLIC = path.join(__dirname, 'public');
 
-let state = { mode: 'pickup', people: [] };
+let state = { mode: 'pickup', people: [], points: [] };
 try { state = { ...state, ...JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')) }; } catch (_) {}
 
 function save() {
@@ -66,6 +66,13 @@ async function api(req, res, url) {
     if (method === 'POST' && parts[3] === 'check') {
       person.checked = !!body.checked; save(); return send(res, 200, person);
     }
+  }
+
+  if (parts[1] === 'points' && method === 'POST') {
+    const name = clean(body.name, 80);
+    if (!name) return send(res, 400, { error: 'กรุณากรอกชื่อจุด' });
+    if (!state.points.includes(name)) { state.points.push(name); save(); }
+    return send(res, 200, state);
   }
 
   if (parts[1] === 'reset' && method === 'POST') {
