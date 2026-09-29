@@ -1,0 +1,210 @@
+<title>เช็คชื่อรับ-ส่ง TP Digital</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+/* Layout: single column mobile app, sky-blue header wash, sticky pill tabs, white cards, yellow accent */
+:root{--navy:#1c3f77;--blue:#2f6fc4;--sky:#dcecfa;--sky2:#bfe0f7;--yellow:#ffd95a;--cream:#fff6d6;--bg:#f4f9fe;--card:#ffffff;--field:#fbfdff;--ok:#2e9e5b;--okbg:#eaf8ef;--okline:#bfe6cc;--danger:#d24b4b;--dangerbg:#fde4e4;--wash:#bfe0f7;--on-navy:#ffffff;--shadow:rgba(28,63,119,.10);
+--font:'Noto Sans Thai',system-ui,-apple-system,'Segoe UI',sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--navy:#e4eeff;--blue:#6aa6f0;--sky:#243a5c;--sky2:#35507a;--yellow:#ffd95a;--cream:#4a4222;--bg:#0f1a2b;--card:#182740;--field:#122036;--ok:#4cc27f;--okbg:#17342a;--okline:#2b5d45;--danger:#ff8a8a;--dangerbg:#4a2626;--wash:#1a2d4b;--on-navy:#0f1a2b;--shadow:rgba(0,0,0,.35);color-scheme:dark}}
+:root[data-theme="dark"]{--navy:#e4eeff;--blue:#6aa6f0;--sky:#243a5c;--sky2:#35507a;--yellow:#ffd95a;--cream:#4a4222;--bg:#0f1a2b;--card:#182740;--field:#122036;--ok:#4cc27f;--okbg:#17342a;--okline:#2b5d45;--danger:#ff8a8a;--dangerbg:#4a2626;--wash:#1a2d4b;--on-navy:#0f1a2b;--shadow:rgba(0,0,0,.35);color-scheme:dark}
+*{box-sizing:border-box}
+body{font-family:var(--font);font-size:16px;color:var(--navy);background:linear-gradient(var(--wash),var(--bg) 260px) no-repeat,var(--bg);padding-inline:16px;padding-block:0 90px;min-height:100vh}
+.wrap{max-width:560px;margin-inline:auto}
+header{text-align:center;padding-block:18px 8px}
+h1{margin:0;font-size:22px;font-weight:800;text-wrap:balance}
+.co{font-size:13px;letter-spacing:.08em;opacity:.75;margin-top:2px}
+.badge{display:inline-block;margin-top:10px;background:var(--yellow);color:#1c3f77;border-radius:999px;padding:6px 18px;font-weight:800}
+.tabs{display:flex;gap:8px;position:sticky;top:env(safe-area-inset-top,0px);padding-block:10px;margin-block:8px;background:var(--wash);z-index:5}
+.tabs button{flex:1;border:0;border-radius:999px;padding:12px;font:inherit;font-weight:800;background:var(--card);color:var(--navy);cursor:pointer}
+.tabs button.on{background:var(--navy);color:var(--on-navy)}
+.card{background:var(--card);border-radius:20px;padding:16px;box-shadow:0 4px 14px var(--shadow);margin-bottom:14px}
+label{display:block;font-weight:600;margin-block:12px 6px}
+input,textarea{width:100%;font:inherit;color:var(--navy);border:2px solid var(--sky2);border-radius:14px;padding:12px;background:var(--field)}
+input:focus,textarea:focus,button:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+textarea{min-height:84px;resize:vertical}
+.hint{font-size:13px;opacity:.7;margin-top:4px}
+.btn{border:0;border-radius:999px;padding:14px 20px;font:inherit;font-weight:800;background:var(--navy);color:var(--on-navy);width:100%;margin-top:16px;cursor:pointer}
+.btn.yellow{background:var(--yellow);color:#1c3f77}
+.btn.ghost{background:var(--sky);color:var(--navy);margin-top:8px}
+.btn.danger{background:var(--dangerbg);color:var(--danger);margin-top:8px}
+.seg{display:flex;background:var(--sky);border-radius:999px;padding:4px;margin-bottom:12px}
+.seg button{flex:1;border:0;background:none;border-radius:999px;padding:10px;font:inherit;font-weight:800;color:var(--navy);cursor:pointer}
+.seg button.on{background:var(--blue);color:#fff}
+.progress{display:flex;justify-content:space-between;font-weight:800;margin-bottom:8px}
+.bar{height:12px;background:var(--sky);border-radius:99px;overflow:hidden;margin-bottom:14px}
+.bar i{display:block;height:100%;background:var(--ok);transition:width .3s}
+.group h3{margin:16px 4px 8px;font-size:16px;display:flex;justify-content:space-between;gap:8px}
+.group h3 span{background:var(--cream);border-radius:999px;padding:2px 12px;font-size:14px;flex:none}
+.row{display:flex;align-items:flex-start;gap:12px;background:var(--card);border-radius:18px;padding:12px;margin-bottom:8px;box-shadow:0 2px 8px var(--shadow);border:2px solid transparent}
+.row.done{background:var(--okbg);border-color:var(--okline)}
+.row.done .nm{text-decoration:line-through;opacity:.65}
+.row.mine{border-color:var(--yellow)}
+.chk{flex:none;width:44px;height:44px;border-radius:12px;border:3px solid var(--blue);background:var(--card);display:grid;place-items:center;font-size:26px;color:#fff;padding:0;cursor:pointer}
+.done .chk{background:var(--ok);border-color:var(--ok)}
+.info{flex:1;min-width:0}
+.nm{font-weight:800;font-size:17px;overflow-wrap:anywhere}
+.note{margin-top:6px;background:var(--cream);border-radius:10px;padding:6px 10px;font-size:14px;white-space:pre-wrap;overflow-wrap:anywhere}
+.edit{flex:none;border:0;background:var(--sky);color:var(--navy);border-radius:10px;height:36px;padding-inline:12px;font:inherit;font-size:14px;cursor:pointer}
+.empty,.msg{text-align:center;padding:28px 10px;opacity:.8}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--navy);color:var(--on-navy);padding:12px 20px;border-radius:999px;font-weight:600;opacity:0;pointer-events:none;transition:.25s;z-index:20;max-width:90vw;text-align:center}
+.toast.show{opacity:1}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>เช็คชื่อรับ-ส่งพนักงาน</h1>
+    <div class="co">TP DIGITAL CO., LTD.</div>
+    <div class="badge" id="badge">รอบรับ</div>
+  </header>
+  <nav class="tabs">
+    <button id="tab-reg" class="on">ลงชื่อ</button>
+    <button id="tab-chk">เช็คชื่อ</button>
+  </nav>
+
+  <section id="view-reg">
+    <form class="card" id="form" autocomplete="off">
+      <b id="form-title" style="font-size:18px">ลงชื่อของคุณ</b>
+      <label for="f-name">ชื่อ</label>
+      <input id="f-name" required maxlength="60" placeholder="เช่น สมชาย ใจดี">
+      <label for="f-point">จุดรับ-ส่ง (เลือกได้จุดเดียว)</label>
+      <input id="f-point" required maxlength="80" list="points" placeholder="พิมพ์ หรือเลือกจุดที่มีอยู่แล้ว">
+      <datalist id="points"></datalist>
+      <div class="hint">พิมพ์จุดใหม่ได้ หรือเลือกจากจุดที่คนอื่นลงไว้</div>
+      <label for="f-note">หมายเหตุ</label>
+      <textarea id="f-note" maxlength="300" placeholder="เช่น วันนี้มาไม่ได้ / เปลี่ยนจุดรับเป็น… / ข้อมูลอื่นๆ"></textarea>
+      <button class="btn yellow" id="f-submit" type="submit">บันทึก</button>
+      <button class="btn ghost" id="f-cancel" type="button" hidden>ยกเลิกการแก้ไข</button>
+      <button class="btn danger" id="f-delete" type="button" hidden>ลบชื่อนี้</button>
+      <button class="btn danger" id="f-delete-yes" type="button" hidden>กดอีกครั้งเพื่อยืนยันการลบ</button>
+    </form>
+    <div class="msg" id="readonly" hidden>บัญชีของคุณดูรายชื่อได้อย่างเดียว ลงชื่อไม่ได้ ให้ผู้ดูแลเพิ่มสิทธิ์เป็น Contributor</div>
+  </section>
+
+  <section id="view-chk" hidden>
+    <div class="seg">
+      <button id="m-pickup" class="on">รอบรับ</button>
+      <button id="m-dropoff">รอบส่ง</button>
+    </div>
+    <div class="progress"><span id="prog-text"></span><span id="prog-pct"></span></div>
+    <div class="bar"><i id="prog-bar" style="width:0"></i></div>
+    <div id="list"></div>
+    <button class="btn danger" id="reset" style="margin-top:20px">รีเซ็ตเครื่องหมาย (เริ่มรอบใหม่)</button>
+    <button class="btn danger" id="reset-yes" hidden>กดอีกครั้งเพื่อยืนยันการรีเซ็ต</button>
+  </section>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let db = null, people = [], mode = 'pickup', editingId = null, canWrite = true, loaded = false;
+let mine = null;
+try { mine = localStorage.getItem('myId'); } catch (_) {}
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const modeLabel = () => (mode === 'pickup' ? 'รอบรับ' : 'รอบส่ง');
+function toast(m) { const t = $('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 2200); }
+const th = (a, b) => a.localeCompare(b, 'th');
+
+function render() {
+  $('badge').textContent = modeLabel();
+  $('m-pickup').classList.toggle('on', mode === 'pickup');
+  $('m-dropoff').classList.toggle('on', mode === 'dropoff');
+  $('points').innerHTML = [...new Set(people.map((p) => p.point))].sort(th).map((p) => `<option value="${esc(p)}">`).join('');
+  const done = people.filter((p) => p.checked).length, total = people.length;
+  $('prog-text').textContent = `${modeLabel()}แล้ว ${done} / ${total} คน`;
+  $('prog-pct').textContent = total ? Math.round(done / total * 100) + '%' : '';
+  $('prog-bar').style.width = total ? done / total * 100 + '%' : '0';
+  if (!db) { $('list').innerHTML = '<div class="empty">เปิดหน้านี้ผ่านลิงก์ที่ล็อกอินแล้วเพื่อใช้งานข้อมูลร่วมกัน</div>'; return; }
+  if (!loaded) { $('list').innerHTML = '<div class="empty">กำลังโหลดรายชื่อ…</div>'; return; }
+  if (!total) { $('list').innerHTML = '<div class="empty">ยังไม่มีรายชื่อ<br>ไปที่แท็บ “ลงชื่อ” เพื่อเพิ่มคนแรก</div>'; return; }
+  const groups = {};
+  people.forEach((p) => (groups[p.point] = groups[p.point] || []).push(p));
+  $('list').innerHTML = Object.keys(groups).sort(th).map((pt) => {
+    const arr = groups[pt].sort((a, b) => th(a.name, b.name));
+    return `<div class="group"><h3>จุด: ${esc(pt)}<span>${arr.filter((p) => p.checked).length}/${arr.length}</span></h3>` + arr.map((p) => `
+      <div class="row ${p.checked ? 'done' : ''} ${p.id === mine ? 'mine' : ''}">
+        <button class="chk" data-check="${p.id}" aria-label="ยืนยัน ${esc(p.name)}">${p.checked ? '✓' : ''}</button>
+        <div class="info"><div class="nm">${esc(p.name)}</div>${p.note ? `<div class="note">${esc(p.note)}</div>` : ''}</div>
+        <button class="edit" data-edit="${p.id}">แก้ไข</button>
+      </div>`).join('') + '</div>';
+  }).join('');
+}
+
+function show(tab) {
+  $('view-reg').hidden = tab !== 'reg'; $('view-chk').hidden = tab !== 'chk';
+  $('tab-reg').classList.toggle('on', tab === 'reg'); $('tab-chk').classList.toggle('on', tab === 'chk');
+  window.scrollTo(0, 0);
+}
+$('tab-reg').onclick = () => show('reg');
+$('tab-chk').onclick = () => show('chk');
+
+function endEdit() {
+  editingId = null; $('form').reset();
+  $('form-title').textContent = 'ลงชื่อของคุณ'; $('f-submit').textContent = 'บันทึก';
+  ['f-cancel', 'f-delete', 'f-delete-yes'].forEach((i) => ($(i).hidden = true));
+}
+function startEdit(id) {
+  const p = people.find((x) => x.id === id); if (!p) return;
+  editingId = id; $('f-name').value = p.name; $('f-point').value = p.point; $('f-note').value = p.note || '';
+  $('form-title').textContent = 'แก้ไขข้อมูล'; $('f-submit').textContent = 'บันทึกการแก้ไข';
+  $('f-cancel').hidden = false; $('f-delete').hidden = false; $('f-delete-yes').hidden = true;
+  show('reg');
+}
+$('f-cancel').onclick = endEdit;
+
+const guard = async (fn) => {
+  if (!db) return toast('ยังเชื่อมต่อข้อมูลไม่ได้');
+  try { await fn(); } catch (e) { toast(e && e.code === 'invalid_argument' ? 'ไม่มีสิทธิ์แก้ไขข้อมูล' : 'บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง'); }
+};
+
+$('form').onsubmit = (e) => {
+  e.preventDefault();
+  const data = { name: $('f-name').value.trim(), point: $('f-point').value.trim(), note: $('f-note').value.trim() };
+  if (!data.name || !data.point) return;
+  guard(async () => {
+    if (editingId) { await db.doc('people/' + editingId).update(data); toast('แก้ไขเรียบร้อย'); }
+    else {
+      const ref = db.collection('people').doc();
+      await ref.set({ ...data, checked: false, createdAt: Date.now() });
+      mine = ref.id; try { localStorage.setItem('myId', mine); } catch (_) {}
+      toast('ลงชื่อเรียบร้อย');
+    }
+    endEdit();
+  });
+};
+$('f-delete').onclick = () => { $('f-delete').hidden = true; $('f-delete-yes').hidden = false; };
+$('f-delete-yes').onclick = () => guard(async () => {
+  await db.doc('people/' + editingId).delete();
+  if (mine === editingId) { mine = null; try { localStorage.removeItem('myId'); } catch (_) {} }
+  endEdit(); toast('ลบแล้ว');
+});
+
+$('list').addEventListener('click', (e) => {
+  const ed = e.target.closest('[data-edit]'), c = e.target.closest('[data-check]');
+  if (ed) return startEdit(ed.dataset.edit);
+  if (!c) return;
+  const p = people.find((x) => x.id === c.dataset.check); if (!p) return;
+  guard(() => db.doc('people/' + p.id).update({ checked: !p.checked }));
+});
+
+const setMode = (m) => guard(() => db.doc('meta/state').set({ mode: m }));
+$('m-pickup').onclick = () => setMode('pickup');
+$('m-dropoff').onclick = () => setMode('dropoff');
+
+$('reset').onclick = () => { $('reset').hidden = true; $('reset-yes').hidden = false; setTimeout(() => { $('reset').hidden = false; $('reset-yes').hidden = true; }, 5000); };
+$('reset-yes').onclick = () => guard(async () => {
+  $('reset').hidden = false; $('reset-yes').hidden = true;
+  for (const p of people.filter((x) => x.checked)) await db.doc('people/' + p.id).update({ checked: false });
+  toast('รีเซ็ตแล้ว พร้อมรอบใหม่');
+});
+
+render();
+(async () => {
+  try {
+    db = await claude.use('db');
+    const user = await claude.use('user');
+    if (user && user.can && user.can('data.write') === false) { canWrite = false; $('readonly').hidden = false; $('form').hidden = true; }
+  } catch (_) { db = null; }
+  if (!db) return render();
+  db.collection('people').onSnapshot((s) => { people = s.docs.map((d) => ({ id: d.id, ...d.data() })); loaded = true; render(); }, () => { loaded = true; render(); });
+  db.doc('meta/state').onSnapshot((s) => { const d = s.data(); if (d && d.mode) mode = d.mode; render(); });
+})();
+</script>
