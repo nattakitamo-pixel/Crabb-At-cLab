@@ -1,0 +1,7 @@
+{
+  "name": "crabb-at-clab",
+  "version": "1.0.0",
+  "description": "เว็บแอพเช็คชื่อรับ-ส่งพนักงาน",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=16" }
+}
